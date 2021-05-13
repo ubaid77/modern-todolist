@@ -5,18 +5,31 @@ import { uuid } from "uuidv4";
 export const TodosContext = createContext();
 
 export const TodosProvider = (props) => {
+  // Check localstorage for saved tasks if any
   const initialTodos = localStorage.getItem("task_list")
     ? JSON.parse(localStorage.getItem("task_list"))
     : [];
 
+  /*
+    Initial States
+    todos- todo list, groupedTodos- Todos grouped by hashtags, selectedTags- selected hashtags
+  */
   const [todos, setTodos] = useState(initialTodos);
   const [groupedTodos, setGroupedTodos] = useState(null);
   const [selectedTags, setSelectedTags] = useState(["all"]);
 
+  /*
+    Group todos by Hashtags
+    @see- group by in helpers/groupBy
+  */
   useEffect(() => {
     setGroupedTodos(groupBy(todos));
   }, [todos]);
 
+  /*
+  Creates new todo & save to localstorage
+  @params {text} string, {hashtag} string
+  */
   const addTodo = (text, hashtag) => {
     const newTodo = {
       id: uuid(),
@@ -31,6 +44,10 @@ export const TodosProvider = (props) => {
     localStorage.setItem("task_list", JSON.stringify(todos));
   };
 
+  /*
+  Marks todo as complete or incomplete
+  @params {id} number
+  */
   const markTodo = (id) => {
     const toBeMarked = todos.splice(
       todos.findIndex((x) => x.id === id),
@@ -42,6 +59,10 @@ export const TodosProvider = (props) => {
     sortTodos(todos);
   };
 
+  /*
+  Sort Todos
+  sort uncompleted todos by creation & sort completed todos by updation
+  */
   const sortTodos = (todos) => {
     const notCompleted = todos.filter((todo) => todo.isComplete === false);
     notCompleted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -54,6 +75,10 @@ export const TodosProvider = (props) => {
     localStorage.setItem("task_list", JSON.stringify(updatedTodos));
   };
 
+  /*
+  Select Tags to group the todos
+  @params {tag} string
+  */
   const toggleTag = (tag) => {
     if (tag === "all") {
       setSelectedTags(["all"]);
@@ -76,6 +101,9 @@ export const TodosProvider = (props) => {
     }
   };
 
+  /*
+  Return Stacked todo list grouped by hashtags
+  */
   const returnTaggedTodos = () => {
     const taggedTodos = [];
     // eslint-disable-next-line
@@ -85,6 +113,9 @@ export const TodosProvider = (props) => {
     return taggedTodos;
   };
 
+  /*
+  Remove todos from localstorage & reset states
+  */
   const clearTodos = () => {
     localStorage.removeItem("task_list");
     setTodos([]);
