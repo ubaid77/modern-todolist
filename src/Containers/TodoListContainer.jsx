@@ -1,45 +1,32 @@
-import { useContext } from "react";
+import { useContext, useCallback } from "react";
 import TodoItem from "../Components/TodoItem";
+import { AiFillCloseCircle } from "react-icons/ai";
 import { TodosContext } from "../todosContext";
 
 const TodoListContainer = () => {
-  const { todos, groupedTodos, markTodo, toggleTag, selectedTags, clearTodos } =
+  const { todos, markTodo, clearTodos, toggleTag, removeTag, selectedTags } =
     useContext(TodosContext);
+
+  const addTag = useCallback(
+    (tag) => {
+      toggleTag(tag);
+    },
+    [toggleTag]
+  );
 
   return (
     <div className="list-container">
-      {todos.length > 0 && (
-        <>
-          <div className="clear-todos-bar">
-            <p className="subheading">hashtags</p>
-            <button onClick={() => clearTodos()}>CLEAR TODOS</button>
-          </div>
-
-          <ul className="tags-list">
-            <li
-              className={selectedTags.includes("all") ? "selected" : ""}
-              onClick={() => toggleTag("all")}
-            >
-              <h2>All</h2>
-              <p>{todos.length} tasks</p>
-            </li>
-
-            {groupedTodos && // eslint-disable-next-line
-              Object.keys(groupedTodos).map((gtodo) => {
-                if (gtodo !== "")
-                  return (
-                    <li
-                      className={selectedTags.includes(gtodo) ? "selected" : ""}
-                      onClick={() => toggleTag(gtodo)}
-                    >
-                      <h2>{gtodo}</h2>
-                      <p>{groupedTodos[gtodo].length} tasks</p>
-                    </li>
-                  );
-              })}
-          </ul>
-        </>
-      )}
+      <div className="clear-todos-bar">
+        <button onClick={() => clearTodos()}>CLEAR TODOS</button>
+      </div>
+      <div className="tags-list">
+        {selectedTags.length > 0 &&
+          selectedTags.map((tag, index) => (
+            <span className="tags">
+              {tag} <AiFillCloseCircle onClick={() => removeTag(index)} />
+            </span>
+          ))}
+      </div>
 
       <p className="subheading">Today's Tasks</p>
       <ul
@@ -54,7 +41,8 @@ const TodoListContainer = () => {
               text={item.text}
               isComplete={item.isComplete}
               markTodo={markTodo}
-              tag={item.hashtag}
+              tags={item.hashtag}
+              addTag={addTag}
             />
           ))}
       </ul>

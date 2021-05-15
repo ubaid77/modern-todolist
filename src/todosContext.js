@@ -16,12 +16,8 @@ export const TodosProvider = (props) => {
   */
   const [todos, setTodos] = useState(initialTodos);
   const [groupedTodos, setGroupedTodos] = useState(null);
-  const [selectedTags, setSelectedTags] = useState(["all"]);
+  const [selectedTags, setSelectedTags] = useState([]);
 
-  /*
-    Group todos by Hashtags
-    @see- group by in helpers/groupBy
-  */
   useEffect(() => {
     setGroupedTodos(groupBy(todos));
   }, [todos]);
@@ -30,11 +26,11 @@ export const TodosProvider = (props) => {
   Creates new todo & save to localstorage
   @params {text} string, {hashtag} string
   */
-  const addTodo = (text, hashtag) => {
+  const addTodo = (text, hashtags) => {
     const newTodo = {
       id: uuid(),
       text,
-      hashtag,
+      hashtag: hashtags,
       isComplete: false,
       createdAt: new Date().toISOString(),
       completedAt: "",
@@ -76,29 +72,24 @@ export const TodosProvider = (props) => {
   };
 
   /*
-  Select Tags to group the todos
-  @params {tag} string
+  Add Tag
+  Add Hash Tag to selected hashtag array
   */
   const toggleTag = (tag) => {
-    if (tag === "all") {
-      setSelectedTags(["all"]);
-    }
     if (selectedTags.includes(tag)) {
-      selectedTags.splice(selectedTags.indexOf(tag), 1);
-      if (selectedTags.length === 0) {
-        selectedTags.push("all");
-      }
-      setSelectedTags([...selectedTags]);
-    } else {
-      if (selectedTags.includes("all")) {
-        setSelectedTags((prevTags) => {
-          prevTags.splice(0, 1);
-          return [...prevTags, tag];
-        });
-      } else {
-        setSelectedTags((prevTags) => [...prevTags, tag]);
-      }
+      return;
     }
+    selectedTags.push(` ${tag}`);
+    setSelectedTags([...selectedTags]);
+  };
+
+  /*
+  Remove Tag
+  Remove selected tag from selected hashtags array
+  */
+  const removeTag = (index) => {
+    selectedTags.splice(index, 1);
+    setSelectedTags([...selectedTags]);
   };
 
   /*
@@ -106,10 +97,17 @@ export const TodosProvider = (props) => {
   */
   const returnTaggedTodos = () => {
     const taggedTodos = [];
+
     // eslint-disable-next-line
-    selectedTags.map((tag) => {
-      taggedTodos.push(...groupedTodos[tag]);
+    Object.keys(groupedTodos).map((gTodo) => {
+      // eslint-disable-next-line
+      if (gTodo === "") return;
+
+      if (selectedTags.every((v) => gTodo.split(",").includes(v))) {
+        taggedTodos.push(...groupedTodos[gTodo]);
+      }
     });
+
     return taggedTodos;
   };
 
@@ -119,25 +117,25 @@ export const TodosProvider = (props) => {
   const clearTodos = () => {
     localStorage.removeItem("task_list");
     setTodos([]);
+    setSelectedTags([]);
     setGroupedTodos(null);
-    setSelectedTags(["all"]);
   };
 
   const state = {
-    todos: selectedTags.includes("all") ? todos : returnTaggedTodos(),
-    groupedTodos,
+    todos: selectedTags.length > 0 ? returnTaggedTodos() : todos,
     selectedTags,
+    groupedTodos,
   };
 
   return (
     <TodosContext.Provider
       value={{
         todos: state.todos,
-        groupedTodos: state.groupedTodos,
         selectedTags: state.selectedTags,
         addTodo,
         markTodo,
         toggleTag,
+        removeTag,
         clearTodos,
       }}
     >

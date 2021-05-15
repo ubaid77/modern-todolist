@@ -6,8 +6,8 @@ const AddTodo = () => {
   const { addTodo } = useContext(TodosContext);
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
-  const [hashtag, setHashTag] = useState("");
   const [errors, setErrors] = useState({});
+  const REG_EX = /(^|\s)(#[a-z\d-]+)/gi;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -19,23 +19,13 @@ const AddTodo = () => {
       }));
       return;
     }
-    if (hashtag === "") {
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        hashtag: "Please add a hashtag",
-      }));
-      return;
+    let hashTags = [];
+    let match;
+    while ((match = REG_EX.exec(text))) {
+      hashTags.push(match[0]);
     }
-    if (hashtag !== "" && hashtag.split("")[0] !== "#") {
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        hashtag: "Please add # to hashtag",
-      }));
-      return;
-    }
-    addTodo(text, hashtag);
+    addTodo(text, hashTags);
     setText("");
-    setHashTag("");
     setErrors({});
     setOpen(false);
   };
@@ -53,16 +43,7 @@ const AddTodo = () => {
             />
             {errors && <span className="error">{errors?.text}</span>}
           </div>
-          <div className="form-grp">
-            <label htmlFor="hashtag">Add Hashtag</label>
-            <input
-              type="text"
-              placeholder="#work"
-              value={hashtag}
-              onChange={(e) => setHashTag(e.target.value)}
-            />
-            {errors && <span className="error">{errors?.hashtag}</span>}
-          </div>
+
           <button type="submit" className="btn add">
             Add
           </button>
